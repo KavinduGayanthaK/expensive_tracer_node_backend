@@ -16,12 +16,12 @@ model user {
 model transacton {
   id       String  @id
   category String
-  type     type
+  type     TransactionType
   amount   Decimal
   date     String
 }
 
-enum type {
+enum TransactionType {
   INCOME
   EXPENSE
 }
