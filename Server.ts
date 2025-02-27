@@ -1,21 +1,30 @@
 import express from 'express'
+import authRoutes, { authenticateToken } from './routes/UserRoutes';
+import  dotenv  from 'dotenv';
+import cors from 'cors';
 
 const app  = express();
 
-app.use(express.json())
+dotenv.config();
 
-app.use('/',(req,res,next)=>{
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, content-type');
+app.use(express.json());
 
-    next();
-})
-
-app.listen(3000, (err=>{
-    console.log("Server running on port 3000");
+app.use(cors({
+    origin: 'http://localhost:8081',  // Allow frontend origin
+    methods: 'GET,PUT,POST,DELETE',
+    allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    credentials: true  // Allow credentials (cookies, authentication headers)
 }));
 
-app.use('/',(req,res,next)=>{
-    res.status(400).send('Not Found');
+app.use('/auth',authRoutes)
+
+app.use(authenticateToken);
+
+
+app.listen(3000,(err)=>{
+    console.log("server running on port 3000");
+})
+
+app.use('/',(req, res)=>{
+    res.status(400).send("Not Found")
 })
