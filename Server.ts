@@ -1,5 +1,6 @@
 import express from 'express'
 import authRoutes, { authenticateToken } from './routes/UserRoutes';
+import transactionRoutes from './routes/TransactinRoutes';
 import  dotenv  from 'dotenv';
 import cors from 'cors';
 
@@ -17,6 +18,7 @@ app.use(cors({
 }));
 
 app.use('/auth',authRoutes)
+app.use('/transaction',transactionRoutes)
 
 app.use(authenticateToken);
 
