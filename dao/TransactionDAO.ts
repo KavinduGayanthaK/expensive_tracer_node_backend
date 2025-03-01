@@ -1,3 +1,5 @@
+import { TransactionType } from "@prisma/client";
+
 export default class TransactionDAO {
     id: string
     category: string;
@@ -12,9 +14,4 @@ export default class TransactionDAO {
         this.amount = amount;
         this.date = date;
     }
-}
-
-export enum TransactionType {
-    INCOME = "INCOME",
-    EXPENSE = "EXPENSE"
 }

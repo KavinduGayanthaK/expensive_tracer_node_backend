@@ -19,9 +19,10 @@ router.post("/login", async (req, res) => {
        const isVerified =  await userService.verifyUserCredentials(user);
 
        if(isVerified){
-           const token = jwt.sign({ username }, process.env.SECRET_KEY as Secret, {expiresIn: "1m"});
+           const token = jwt.sign({ username }, process.env.SECRET_KEY as Secret, {expiresIn: "1d"});
            const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN as Secret, {expiresIn: "7d"});
-           res.json({accessToken : token, refreshToken : refreshToken});
+           res.status(201).json({accessToken : token, refreshToken : refreshToken});
+        
        }else{
            res.sendStatus(403).send('Invalid credentials')
        }
@@ -45,7 +46,7 @@ router.post("/register", async (req, res) => {
         console.log(err);
         res.status(401).json(err);
     }
-
+    
 })
 
 router.post("/refresh-token", async (req, res) => {

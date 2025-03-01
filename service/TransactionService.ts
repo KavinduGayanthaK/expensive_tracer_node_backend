@@ -1,17 +1,16 @@
-import { PrismaClient } from "@prisma/client";
-import TransactionDAO, { TransactionType } from "../dao/TransactionDAO";
+import { PrismaClient, TransactionType } from "@prisma/client";
 import TransactionDTO from "../dto/TransactionDTO";
 import { TransactionRepository } from "../repository/TransactionRepository";
+import TransactionDAO from "../dao/TransactionDAO";
 
 export class TransactionService {
-
     transactionRepository = new TransactionRepository();
     prisma = new PrismaClient();
 
     async generateTransactionId() {
         try {
             const lastTransaction = await this.prisma.transacton.findFirst({
-                orderBy: { id: 'desc' }, // Get the last user by ID in descending order
+                orderBy: { id: 'desc' }, // Get the last transaction by ID in descending order
                 select: { id: true } // Select only the ID field
             });
 
@@ -20,59 +19,57 @@ export class TransactionService {
                 return `TRANSACTION-${(lastIdNumber + 1).toString().padStart(3, "0")}`;
             }
 
-            return "TRANSACTION-001"; // Default ID if no users exist
+            return "TRANSACTION-001"; // Default ID if no transactions exist
         } catch (error) {
-            console.error("Error generating user ID:", error);
-            throw new Error("Failed to generate user ID.");
+            console.error("Error generating transaction ID:", error);
+            throw new Error("Failed to generate transaction ID.");
         }
     }
 
     async addTransaction(transaction: TransactionDTO) {
         try {
-            const transactonId = await this.generateTransactionId();
-            const transactionType = TransactionType[transaction.type as keyof typeof TransactionType]
+            // Validate the type to ensure it is either INCOME or EXPENSE
+            const transactionType = this.getTransactionType(transaction.type);
+            
+            const transactionId = await this.generateTransactionId();
             const transactionDao = new TransactionDAO(
-                transactonId,
+                transactionId,
                 transaction.category,
                 transactionType,
                 transaction.amount,
                 transaction.date
-            )
+            );
 
-           await this.transactionRepository.createTransaction(transactionDao);
-           
-        }catch(error) {
-            console.log(" can't added trnasaction.this error service layer : ",error);
+            await this.transactionRepository.createTransaction(transactionDao);
+
+        } catch (error) {
+            console.log("Can't add transaction. Error in service layer:", error);
             throw new Error("Failed to add transaction.");
         }
     }
 
     async getAllTransaction() {
         try {
-            const getTransaction = await this.transactionRepository.getAllTransaction();
-            return getTransaction;
-        }catch(error) {
-            console.log("Can't get transactions. This error service layer : ",error);
-            throw new Error("Failed to get transaction.");
+            return await this.transactionRepository.getAllTransaction();
+        } catch (error) {
+            console.log("Can't get transactions. Error in service layer:", error);
+            throw new Error("Failed to get transactions.");
         }
     }
 
     async updateTransaction(id: string, transaction: TransactionDTO) {
         try {
-            const transactionType = TransactionType[transaction.type.toUpperCase() as keyof typeof TransactionType]
+            const transactionType = this.getTransactionType(transaction.type);
 
-            if (!transactionType) {
-                throw new Error("Invalid transaction type. Must be INCOME or EXPENSE.");
-            }
-    
             const updateTransaction = await this.transactionRepository.updateTransaction(
-                id, new TransactionDAO(id,transaction.category,transactionType,transaction.amount,transaction.date)
+                id,
+                new TransactionDAO(id, transaction.category, transactionType, transaction.amount, transaction.date)
             );
 
             console.log(updateTransaction);
-            
-        }  catch (error) {
-            console.log("Can't update transaction. This error occurred in the service layer:", error);
+
+        } catch (error) {
+            console.log("Can't update transaction. Error in service layer:", error);
             throw new Error("Failed to update transaction.");
         }
     }
@@ -81,11 +78,20 @@ export class TransactionService {
         try {
             const deleteTransaction = await this.transactionRepository.deleteTransaction(id);
             console.log(deleteTransaction);
-            
-        } catch(error) {
-            console.log("Can't delete transaction. This error occurred in the service layer:", error);
+        } catch (error) {
+            console.log("Can't delete transaction. Error in service layer:", error);
             throw new Error("Failed to delete transaction.");
-            
         }
     }
- }
+
+    // Helper method to convert string type to TransactionType
+    private getTransactionType(type: string): TransactionType {
+        const validTypes: TransactionType[] = [TransactionType.INCOME, TransactionType.EXPENSE];
+        
+        if (validTypes.includes(type as TransactionType)) {
+            return type as TransactionType;  // Safely cast to TransactionType
+        } else {
+            throw new Error("Invalid transaction type. Must be INCOME or EXPENSE.");
+        }
+    }
+}
