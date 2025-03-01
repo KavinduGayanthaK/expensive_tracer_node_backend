@@ -18,15 +18,15 @@ app.use(cors({
 }));
 
 app.use('/auth',authRoutes)
-app.use('/transaction',transactionRoutes)
+app.use('/transaction',authenticateToken,transactionRoutes)
 
 app.use(authenticateToken);
 
 
-app.listen(3000,(err)=>{
+app.listen(3001,"0.0.0.0",(err)=>{
     console.log("server running on port 3000");
 })
 
 app.use('/',(req, res)=>{
-    res.status(400).send("Not Found")
+    res.status(400).send("Not Found Server")
 })
